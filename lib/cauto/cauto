@@ -1,24 +1,24 @@
 #!/bin/bash
 
-function cauto_help() 
+function cauto_help()
 {
 	cat << EOF
 
 $(basename $0)
 
-	$(basename $0) init             
+	$(basename $0) init
 		init a new project in working dir
-	$(basename $0) scan             
+	$(basename $0) scan
 		scan for targets, dependencies and update config
-	$(basename $0) conf             
+	$(basename $0) conf
 		configure CMakeCache.txt
-	$(basename $0) make <targets>   
+	$(basename $0) make <targets>
 		build targets
-	$(basename $0) clean            
+	$(basename $0) clean
 		clean project
-	$(basename $0) help             
+	$(basename $0) help
 		show help
-	$(basename $0) doc             
+	$(basename $0) doc
 		show documentation
 
 EOF
@@ -27,22 +27,22 @@ EOF
 function cauto_doc()
 {
 		cat << EOF
-		
+
 CAuto is a tool for automatic compile and link c++ projects
 using CMake and a naming convention in the source tree.
 
 Source tree consists of the following directories:
-	exe/    
+	exe/
 		targets to be compiled into executables
-	so/     
+	so/
 		targets to be compiled into shared object
-	inc/    
+	inc/
 		header of sources in src/
-	src/    
+	src/
 		source of headers in inc/
-	conf/   
+	conf/
 		project configuration
-	build/  
+	build/
 		project build dir
 	find/
 		local FindPackage.cmake scripts of project
@@ -52,15 +52,15 @@ Targets are build into build/. The directory structure of
 	are named according the basename of the corresponding
 	target source file. If new targets are added or removed
 	from the source tree _cauto scan_ has to be invoked
-	to update the Makefile. 
+	to update the Makefile.
 
 Headers and Sources are located in inc/ and src/. By naming
 	convention it is required for a source file that a header
 	file exists in inc/ with the same basename. Dependencies
 	of source files and targets are scanned using _g++ -MM_.
 	This requires the targets cxxflags and all involved source
-	files to be syntactically correct. 
-	
+	files to be syntactically correct.
+
 Configuration of the project is located in conf/. The directory
 	structure of exe/* and so/* is recreated in conf/* and
 	following config files can be used to setup the project:
@@ -81,7 +81,7 @@ Configuration of the project is located in conf/. The directory
 	to be configured in _conf/package.cmake_. In order
 	to use a CMake package a FindPackage.cmake script has
 	to be installed in CMake default search path or in find/.
-	
+
 Packages which are used by targets in the project are added
 	by using CMake command _ADD_PACKAGE(...)_ in the CMake file
 	_conf/package.cmake_ using the following syntax:
@@ -90,7 +90,7 @@ Packages which are used by targets in the project are added
 	adds an additional parameter <var_suffix>. CAuto configures
 	targets using the following CMake variables:
 		<var_prefix>_INCLUDE_DIRS
-			include dirs to be used to compile target 
+			include dirs to be used to compile target
 		<var_prefix>_LIBRARIES
 			libraries to be used to link target
 		<var_prefix>_DEFINITIONS
@@ -102,7 +102,7 @@ Packages which are used by targets in the project are added
 	assumed by CAuto a cmake file _conf/<var_suffix>.cmake_ is
 	called in which the variables can be set up using the find
 	script output.
-		
+
 EOF
 }
 
@@ -110,7 +110,7 @@ EOF
 	cauto_help &&
 	exit 1
 
-CMAKELISTS="$(dirname $0)/CMakeLists.txt"
+CMAKELISTS="$(readlink -m $(dirname $0)/CMakeLists.txt)"
 
 while [ $# -gt 0 ]
 do

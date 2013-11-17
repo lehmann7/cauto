@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 set -u
-$(dirname $0)/../lib/cauto/cauto $*
+$(readlink -m $(dirname $0)/../lib/cauto/cauto) $*
 exit $?

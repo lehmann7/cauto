@@ -13,15 +13,15 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 ########################################################################
 
 ########################################################################
-FUNCTION(CAUTO_MESSAGE 
+FUNCTION(CAUTO_MESSAGE
 	message
 )
 	MESSAGE("++ ${message}")
 ENDFUNCTION(CAUTO_MESSAGE)
 
 ########################################################################
-FUNCTION(CAUTO_MESSAGE_LIST 
-	message_prefix 
+FUNCTION(CAUTO_MESSAGE_LIST
+	message_prefix
 	message_list
 )
 	FOREACH(str IN LISTS message_list)
@@ -30,9 +30,9 @@ FUNCTION(CAUTO_MESSAGE_LIST
 ENDFUNCTION(CAUTO_MESSAGE_LIST)
 
 ########################################################################
-FUNCTION(CAUTO_SET_TARGET_PROPERTIES 
-	target_name 
-	property 
+FUNCTION(CAUTO_SET_TARGET_PROPERTIES
+	target_name
+	property
 	string_list
 )
 	STRING(REPLACE ";" " " string_list "${string_list}")
@@ -40,8 +40,8 @@ FUNCTION(CAUTO_SET_TARGET_PROPERTIES
 ENDFUNCTION(CAUTO_SET_TARGET_PROPERTIES)
 
 ########################################################################
-FUNCTION(CAUTO_FILE_READ_LIST 
-	file_name 
+FUNCTION(CAUTO_FILE_READ_LIST
+	file_name
 	return
 )
 	IF(EXISTS ${file_name})
@@ -56,9 +56,9 @@ FUNCTION(CAUTO_FILE_READ_LIST
 ENDFUNCTION(CAUTO_FILE_READ_LIST)
 
 ########################################################################
-FUNCTION(CAUTO_FILE_READ_CONF_LIST 
-	target_type 
-	target_basename 
+FUNCTION(CAUTO_FILE_READ_CONF_LIST
+	target_type
+	target_basename
 	file_name return
 )
 	SET(str_list1 "")
@@ -75,10 +75,10 @@ FUNCTION(CAUTO_FILE_READ_CONF_LIST
 ENDFUNCTION(CAUTO_FILE_READ_CONF_LIST)
 
 ########################################################################
-FUNCTION(CAUTO_FILE_MAKE_CONF_DEPS 
-	target_type 
-	target_basename 
-	file_names 
+FUNCTION(CAUTO_FILE_MAKE_CONF_DEPS
+	target_type
+	target_basename
+	file_names
 	return
 )
 	SET(str_list "")
@@ -98,8 +98,8 @@ FUNCTION(CAUTO_FILE_MAKE_CONF_DEPS
 ENDFUNCTION(CAUTO_FILE_MAKE_CONF_DEPS)
 
 ########################################################################
-FUNCTION(ADD_PACKAGE 
-	package_prefix 
+FUNCTION(ADD_PACKAGE
+	package_prefix
 	package_name
 )
 	CAUTO_MESSAGE("Add Package: ${package_prefix}")
@@ -133,9 +133,9 @@ FUNCTION(ADD_PACKAGE
 ENDFUNCTION(ADD_PACKAGE)
 
 ########################################################################
-FUNCTION(FIND_TARGET 
-	target_type 
-	source_ext_list 
+FUNCTION(FIND_TARGET
+	target_type
+	source_ext_list
 	add_command
 )
 	SET(target_all "")
@@ -151,6 +151,7 @@ FUNCTION(FIND_TARGET
 			SET(target_source ${CAUTO_PROJECT_ROOT}/${target_type}/${target_source_rel})
 			GET_FILENAME_COMPONENT(target_dirname_rel ${target_source_rel} DIRECTORY)
 			STRING(REPLACE ${source_ext} "" target_basename_rel ${target_source_rel})
+			GET_FILENAME_COMPONENT(target_binname ${target_basename_rel} NAME)
 			STRING(REPLACE / _ target_name ${target_basename_rel})
 			LIST(APPEND target_all ${target_name})
 			CAUTO_MESSAGE("${target_name}")
@@ -196,10 +197,12 @@ FUNCTION(FIND_TARGET
 				SET(target_binary ${target_name})
 				ADD_EXECUTABLE(${target_name} ${ARGN} ${target_source} ${dep_sources})
 				SET_TARGET_PROPERTIES(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CAUTO_BUILD_DIR}/${target_dirname_rel})
+				SET_TARGET_PROPERTIES(${target_name} PROPERTIES RUNTIME_OUTPUT_NAME ${target_binname})
 			ELSEIF(add_command STREQUAL ADD_LIBRARY)
 				SET(target_binary lib${target_name}.so)
 				ADD_LIBRARY(${target_name} ${ARGN} ${target_source} ${dep_sources})
 				SET_TARGET_PROPERTIES(${target_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CAUTO_BUILD_DIR}/${target_dirname_rel})
+				SET_TARGET_PROPERTIES(${target_name} PROPERTIES LIBRARY_OUTPUT_NAME ${target_binname})
 			ENDIF()
 			CAUTO_SET_TARGET_PROPERTIES(${target_name} COMPILE_FLAGS "${${target_name}_CXXFLAGS}")
 			CAUTO_SET_TARGET_PROPERTIES(${target_name} LINK_FLAGS "${${target_name}_LDFLAGS}")
@@ -283,9 +286,9 @@ IF(NOT EXISTS ${CAUTO_PACKAGE_FILE})
 #	ADD_PACKAGE(VTK VTK REQUIRED)
 #	ADD_PACKAGE(Boost Boost REQUIRED COMPONENTS system filesystem program_options)
 #	ADD_PACKAGE(OSG osg REQUIRED)
-#	
+#
 	\n")
-	
+
 ENDIF()
 
 # exe targets ##########################################################

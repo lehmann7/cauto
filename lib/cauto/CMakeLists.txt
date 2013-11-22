@@ -6,6 +6,10 @@
 ## using CMake and a naming convention in the source tree.
 ##
 
+## TODO
+#	dont conf target if deps not found
+#	cauto scan make should run without error
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 ########################################################################
@@ -13,11 +17,38 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 ########################################################################
 
 ########################################################################
+FUNCTION(CAUTO_LIST_VARIABLES)
+	MESSAGE(STATUS "")
+	GET_CMAKE_PROPERTY(vars VARIABLES)
+	FOREACH(var IN LISTS vars)
+		MESSAGE(STATUS "${var} = '${${var}}'")
+	ENDFOREACH()
+	MESSAGE(STATUS "")
+ENDFUNCTION()
+
+########################################################################
+FUNCTION(CAUTO_LOG_FIND_SCRIPTS)
+	FILE(GLOB_RECURSE
+		script_files1
+		FOLLOW_SYMLINKS
+		${CMAKE_ROOT}/*/Find*.cmake
+	)
+	FILE(GLOB_RECURSE
+		script_files2
+		FOLLOW_SYMLINKS
+		${CMAKE_MODULE_PATH}/*/Find*.cmake
+	)
+	LIST(APPEND script_files1 ${script_files2})
+	LIST(SORT script_files1)
+	CAUTO_FILE_WRITE_LIST(${CAUTO_FILES_DIR}/FindScripts "${script_files1}")
+ENDFUNCTION()
+
+########################################################################
 FUNCTION(CAUTO_MESSAGE
 	message
 )
 	MESSAGE("++ ${message}")
-ENDFUNCTION(CAUTO_MESSAGE)
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(CAUTO_MESSAGE_LIST
@@ -27,7 +58,7 @@ FUNCTION(CAUTO_MESSAGE_LIST
 	FOREACH(str IN LISTS message_list)
 		CAUTO_MESSAGE("${message_prefix} ${str}")
 	ENDFOREACH()
-ENDFUNCTION(CAUTO_MESSAGE_LIST)
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(CAUTO_SET_TARGET_PROPERTIES
@@ -37,7 +68,7 @@ FUNCTION(CAUTO_SET_TARGET_PROPERTIES
 )
 	STRING(REPLACE ";" " " string_list "${string_list}")
 	SET_TARGET_PROPERTIES(${target_name} PROPERTIES ${property} "${string_list}")
-ENDFUNCTION(CAUTO_SET_TARGET_PROPERTIES)
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(CAUTO_FILE_READ_LIST
@@ -53,7 +84,29 @@ FUNCTION(CAUTO_FILE_READ_LIST
 	ELSEIF(ARGC STREQUAL 2)
 		FILE(WRITE ${file_name} "${${return}}")
 	ENDIF()
-ENDFUNCTION(CAUTO_FILE_READ_LIST)
+ENDFUNCTION()
+
+########################################################################
+FUNCTION(CAUTO_FILE_WRITE_LIST
+	file_name
+	content
+)
+	FILE(WRITE ${file_name} "")
+	FOREACH(item IN LISTS content)
+		FILE(APPEND ${file_name} "${item}\n")
+	ENDFOREACH()
+ENDFUNCTION()
+
+########################################################################
+FUNCTION(CAUTO_FILE_WRITE_VARS
+	file_name
+	var_names
+)
+	FILE(WRITE ${file_name} "")
+	FOREACH(var IN LISTS var_names)
+		FILE(APPEND ${file_name} "${var} = '${${var}}'\n")
+	ENDFOREACH()
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(CAUTO_FILE_READ_CONF_LIST
@@ -66,13 +119,13 @@ FUNCTION(CAUTO_FILE_READ_CONF_LIST
 	WHILE(target_basename)
 		GET_FILENAME_COMPONENT(target_basename ${target_basename} DIRECTORY)
 		SET(str_list2 "")
-		CAUTO_FILE_READ_LIST(${CAUTO_CONF_DIR}/${target_basename}/${file_name} str_list2)
+		CAUTO_FILE_READ_LIST(${CAUTO_CONF_DIR}/${target_basename}/${file_name} str_list2 NOCREATE)
 		IF(str_list2)
 			LIST(APPEND str_list1 "${str_list2}")
 		ENDIF()
 	ENDWHILE()
 	SET(${return} "${str_list1}" PARENT_SCOPE)
-ENDFUNCTION(CAUTO_FILE_READ_CONF_LIST)
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(CAUTO_FILE_MAKE_CONF_DEPS
@@ -95,23 +148,30 @@ FUNCTION(CAUTO_FILE_MAKE_CONF_DEPS
 		ENDFOREACH()
 	ENDWHILE()
 	SET(${return} "${str_list}" PARENT_SCOPE)
-ENDFUNCTION(CAUTO_FILE_MAKE_CONF_DEPS)
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(ADD_PACKAGE
 	package_prefix
 	package_name
 )
+	GET_CMAKE_PROPERTY(add_pkg_vars1 VARIABLES)
 	CAUTO_MESSAGE("Add Package: ${package_prefix}")
 	FIND_PACKAGE(${package_name} ${ARGN})
 	SET(package_file )
-	INCLUDE(${CAUTO_CONF_DIR}/${package_prefix}.cmake OPTIONAL)
-	IF(NOT ${package_prefix}_FOUND)
+	INCLUDE(${CAUTO_CONF_DIR}/${package_prefix}.cauto OPTIONAL)
+	IF(
+		NOT ${package_prefix}_FOUND AND
+		NOT ${package_name}_FOUND
+	)
 		CAUTO_MESSAGE("Package ${package_name} not found.")
 	ELSE()
 		IF(${package_prefix}_INCLUDE_DIRS)
 			CAUTO_MESSAGE_LIST(${package_prefix}_INCLUDE_DIRS "${${package_prefix}_INCLUDE_DIRS}")
 			SET(${package_prefix}_INCLUDE_DIRS "${${package_prefix}_INCLUDE_DIRS}" PARENT_SCOPE)
+		ELSEIF(${package_name}_INCLUDE_DIRS)
+			CAUTO_MESSAGE_LIST(${package_name}_INCLUDE_DIRS "${${package_name}_INCLUDE_DIRS}")
+			SET(${package_name}_INCLUDE_DIRS "${${package_name}_INCLUDE_DIRS}" PARENT_SCOPE)
 		ELSE()
 			CAUTO_MESSAGE("${package_prefix}_INCLUDE_DIRS not defined.")
 		ENDIF()
@@ -119,6 +179,9 @@ FUNCTION(ADD_PACKAGE
 		IF(${package_prefix}_LIBRARIES)
 			CAUTO_MESSAGE_LIST(${package_prefix}_LIBRARIES "${${package_prefix}_LIBRARIES}")
 			SET(${package_prefix}_LIBRARIES "${${package_prefix}_LIBRARIES}" PARENT_SCOPE)
+		ELSEIF(${package_name}_LIBRARIES)
+			CAUTO_MESSAGE_LIST(${package_name}_LIBRARIES "${${package_name}_LIBRARIES}")
+			SET(${package_name}_LIBRARIES "${${package_name}_LIBRARIES}" PARENT_SCOPE)
 		ELSE()
 			CAUTO_MESSAGE("${package_prefix}_LIBRARIES not defined.")
 		ENDIF()
@@ -126,11 +189,18 @@ FUNCTION(ADD_PACKAGE
 		IF(${package_prefix}_DEFINITIONS)
 			CAUTO_MESSAGE_LIST(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}")
 			SET(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}" PARENT_SCOPE)
+		ELSEIF(${package_name}_DEFINITIONS)
+			CAUTO_MESSAGE_LIST(${package_name}_DEFINITIONS "${${package_name}_DEFINITIONS}")
+			SET(${package_name}_DEFINITIONS "${${package_name}_DEFINITIONS}" PARENT_SCOPE)
 		ELSE()
 			CAUTO_MESSAGE("${package_prefix}_DEFINITIONS not defined.")
 		ENDIF()
 	ENDIF()
-ENDFUNCTION(ADD_PACKAGE)
+	GET_CMAKE_PROPERTY(add_pkg_vars2 VARIABLES)
+	LIST(REMOVE_ITEM add_pkg_vars2 add_pkg_vars1 ${add_pkg_vars1})
+	LIST(SORT add_pkg_vars2)
+	CAUTO_FILE_WRITE_VARS(${CAUTO_FILES_DIR}/AddPackage-${package_prefix} "${add_pkg_vars2}")
+ENDFUNCTION()
 
 ########################################################################
 FUNCTION(FIND_TARGET
@@ -155,47 +225,72 @@ FUNCTION(FIND_TARGET
 			STRING(REPLACE / _ target_name ${target_basename_rel})
 			LIST(APPEND target_all ${target_name})
 			CAUTO_MESSAGE("${target_name}")
+			#~ CAUTO_MESSAGE("${target_name} source ${target_source}")
+			#~ CAUTO_MESSAGE("${target_name} binary ${CAUTO_BUILD_DIR}/${target_dirname_rel}/${target_binname}")
 
 			SET(target_cxxflags "")
 			SET(target_ldflags "")
 			SET(target_package "")
+			SET(target_incdirs "")
+			SET(target_lddirs "")
+			SET(target_defs "")
+			SET(target_libs "")
 			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "cxxflags" target_cxxflags)
 			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "ldflags" target_ldflags)
 			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "package" target_package)
+			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "incdirs" target_incdirs)
+			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "lddirs" target_lddirs)
+			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "defs" target_defs)
+			CAUTO_FILE_READ_CONF_LIST(${target_type} ${target_basename_rel} "libs" target_libs)
+			#~ CAUTO_MESSAGE_LIST("${target_name} cxxflags" "${target_cxxflags}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} ldflags" "${target_ldflags}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} package" "${target_package}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} incdirs" "${target_incdirs}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} lddirs" "${target_lddirs}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} defs" "${target_defs}")
+			#~ CAUTO_MESSAGE_LIST("${target_name} libs" "${target_libs}")
 
 			#~ SET(conf_sources "")
 			#~ CAUTO_FILE_MAKE_CONF_DEPS(${target_type} ${target_basename_rel} "cxxflags;ldflags;package" conf_sources)
 			#~ CAUTO_MESSAGE_LIST("${target_name} conf" "${conf_sources}")
 
 			SET(target_include_dirs "")
-			SET(target_libraries "")
-			SET(target_definitions "")
+			FOREACH(include_dir IN LISTS target_incdirs)
+				IF(IS_ABSOLUTE ${include_dir})
+					LIST(APPEND target_include_dirs ${include_dir})
+				ELSE()
+					LIST(APPEND target_include_dirs ${CAUTO_PROJECT_ROOT}/${include_dir})
+				ENDIF()
+			ENDFOREACH()
+
+			SET(target_libraries "${target_libs}")
+			SET(target_definitions "${target_defs}")
 			FOREACH(package_prefix IN LISTS target_package)
 				IF(package_prefix)
 					IF(${package_prefix}_INCLUDE_DIRS)
-						CAUTO_MESSAGE("${target_name} include ${package_prefix}")
+						#~ CAUTO_MESSAGE("${target_name} include ${package_prefix}")
 						LIST(APPEND target_include_dirs "${${package_prefix}_INCLUDE_DIRS}")
 					ENDIF()
 					IF (${package_prefix}_LIBRARIES)
-						CAUTO_MESSAGE("${target_name} link ${package_prefix}")
+						#~ CAUTO_MESSAGE("${target_name} link ${package_prefix}")
 						LIST(APPEND target_libraries "${${package_prefix}_LIBRARIES}")
 					ENDIF()
 					IF (${package_prefix}_DEFINITIONS)
-						CAUTO_MESSAGE("${target_name} define ${package_prefix}")
+						#~ CAUTO_MESSAGE("${target_name} define ${package_prefix}")
 						LIST(APPEND target_definitions "${${package_prefix}_DEFINITIONS}")
 					ENDIF()
 				ENDIF()
 			ENDFOREACH()
 
-			SET(compiler_include "-I${CAUTO_INCLUDE_DIR}")
+			SET(compiler_include_dirs "-I${CAUTO_INCLUDE_DIR}")
 			FOREACH(include_dir IN LISTS target_include_dirs)
-				SET(compiler_include "${compiler_include} -I${include_dir}")
+				SET(compiler_include_dirs "${compiler_include_dirs} -I${include_dir}")
 			ENDFOREACH()
-			STRING(REPLACE ";" " " compiler_include "${compiler_include}")
-			SEPARATE_ARGUMENTS(compiler_include UNIX_COMMAND "${compiler_include}")
+			STRING(REPLACE ";" " " compiler_include_dirs "${compiler_include_dirs}")
+			SEPARATE_ARGUMENTS(compiler_include_dirs UNIX_COMMAND "${compiler_include_dirs}")
 
 			EXECUTE_PROCESS(
-				COMMAND ${CMAKE_CXX_COMPILER} ${target_cxxflags} ${compiler_include} -c -MM ${target_source}
+				COMMAND ${CMAKE_CXX_COMPILER} ${target_cxxflags} ${compiler_include_dirs} -c -MM ${target_source}
 				COMMAND tr -d "\\\\"
 				COMMAND tr -d "\\n"
 				COMMAND tr " " "\\t"
@@ -233,20 +328,15 @@ FUNCTION(FIND_TARGET
 			ENDIF()
 			CAUTO_SET_TARGET_PROPERTIES(${target_name} COMPILE_FLAGS "${target_cxxflags}")
 			CAUTO_SET_TARGET_PROPERTIES(${target_name} LINK_FLAGS "${target_ldflags}")
-			#~ CAUTO_MESSAGE("${target_name} source ${target_source}")
-			#~ CAUTO_MESSAGE("${target_name} binary ${CAUTO_BUILD_DIR}/${target_binary}")
-			CAUTO_MESSAGE_LIST("${target_name} cxxflags" "${target_cxxflags}")
-			CAUTO_MESSAGE_LIST("${target_name} ldflags" "${target_ldflags}")
-			#~ CAUTO_MESSAGE_LIST("${target_name} package" "${target_package}")
-
 			TARGET_INCLUDE_DIRECTORIES(${target_name} PUBLIC ${target_include_dirs})
-			TARGET_LINK_LIBRARIES(${target_name} PUBLIC ${target_libraries})
+            TARGET_COMPILE_OPTIONS(${target_name} PUBLIC ${target_cxxflags})
 			TARGET_COMPILE_DEFINITIONS(${target_name} PUBLIC ${target_definitions})
+			TARGET_LINK_LIBRARIES(${target_name} PUBLIC ${target_libraries})
 		ENDFOREACH()
 	ENDFOREACH()
 
 	ADD_CUSTOM_TARGET(list_${target_type} COMMAND echo \""${target_all}\"")
-ENDFUNCTION(FIND_TARGET)
+ENDFUNCTION()
 
 ########################################################################
 # IMPLEMENTATION #######################################################
@@ -269,6 +359,7 @@ SET(CAUTO_SOURCE_DIR ${CAUTO_PROJECT_ROOT}/src)
 SET(CAUTO_BUILD_DIR ${CAUTO_PROJECT_ROOT}/build)
 SET(CAUTO_CONF_DIR ${CAUTO_PROJECT_ROOT}/conf)
 SET(CAUTO_PACKAGE_FILE ${CAUTO_PROJECT_ROOT}/conf/package.cmake)
+SET(CAUTO_FILES_DIR ${CMAKE_CURRENT_BINARY_DIR}/CAutoFiles)
 
 CAUTO_MESSAGE("Root: ${CAUTO_PROJECT_ROOT}")
 CAUTO_MESSAGE("Include: ${CAUTO_INCLUDE_DIR}")
@@ -292,6 +383,7 @@ INCLUDE_DIRECTORIES(${CAUTO_INCLUDE_DIR})
 #	Package_LIBRARIES
 #	Package_DEFINITIONS
 SET(CMAKE_MODULE_PATH ${CAUTO_PROJECT_ROOT}/find)
+CAUTO_LOG_FIND_SCRIPTS()
 INCLUDE(${CAUTO_PACKAGE_FILE} OPTIONAL)
 IF(NOT EXISTS ${CAUTO_PACKAGE_FILE})
 	FILE(WRITE ${CAUTO_PACKAGE_FILE} "

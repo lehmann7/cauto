@@ -155,7 +155,7 @@ do
 			;;
 
 		clean)
-			rm -rf build
+			rm -rf build/*
 			;;
 
 		help)

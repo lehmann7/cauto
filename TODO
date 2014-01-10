@@ -1,0 +1,3 @@
+* project language appears in codeblocks proj filename, set project name without language
+* do not overwrite any files in init (conf/project)
+* add header files to source, to they appear in IDE projects

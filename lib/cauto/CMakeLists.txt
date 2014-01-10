@@ -344,7 +344,7 @@ ENDFUNCTION()
 
 # init project #########################################################
 CAUTO_MESSAGE("CAuto")
-SET(CAUTO_PROJECT_FILE conf/project)
+SET(CAUTO_PROJECT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/conf/project)
 SET(CAUTO_PROJECT "CAutoProj CXX")
 CAUTO_FILE_READ_LIST(${CAUTO_PROJECT_FILE} CAUTO_PROJECT)
 PROJECT(${CAUTO_PROJECT})

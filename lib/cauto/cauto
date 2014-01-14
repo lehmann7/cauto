@@ -154,6 +154,16 @@ do
 			exit $?
 			;;
 
+		targets)
+			TARGETS=$*
+			[ -e build ] && \
+				(
+					cd build
+					make list_exe | tr ' ' '\n'
+				)
+			exit $?
+			;;
+
 		clean)
 			rm -rf build/*
 			;;

@@ -132,7 +132,7 @@ do
 			[ -e build ] && \
 				(
 					cd build
-					cmake ..
+					cmake .
 				)
 			;;
 
@@ -140,7 +140,7 @@ do
 			[ -e build ] && \
 				(
 					cd build
-					ccmake ..
+					ccmake .
 				)
 			;;
 

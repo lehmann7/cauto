@@ -1,6 +1,6 @@
 # Maintainer: Danny Arnold  <despairblue@skeil.de>
 pkgname=cauto-git
-pkgver=r5.b8ca4b6
+pkgver=r15.f528e6b
 pkgrel=1
 pkgdesc="CAuto is a simple command line tool for automatic compile and link C++ projects."
 url="https://github.com/lehmann7/cauto"

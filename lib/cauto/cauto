@@ -14,6 +14,8 @@ $(basename $0)
 		configure CMakeCache.txt
 	$(basename $0) make <targets>
 		build targets
+	$(basename $0) targets
+		list all targets
 	$(basename $0) clean
 		clean project
 	$(basename $0) help

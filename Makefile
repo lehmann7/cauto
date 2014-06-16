@@ -9,7 +9,7 @@ all:
 	# projects using CMake and a naming convention in the source tree.
 	#
 	# install CAuto using
-	#  $$ make PREFIX=/usr/local/lib install
+	#  $$ make PREFIX=/usr/local install
 	#
 	# this creates
 	#  PREFIX/bin/cauto

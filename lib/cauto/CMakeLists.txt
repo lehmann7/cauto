@@ -10,7 +10,7 @@
 #	dont conf target if deps not found
 #	cauto scan make should run without error
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 ########################################################################
 # FUNCTIONS ############################################################

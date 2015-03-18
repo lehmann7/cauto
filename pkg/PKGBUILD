@@ -1,6 +1,6 @@
 # Maintainer: Danny Arnold  <despairblue@skeil.de>
 pkgname=cauto-git
-pkgver=r15.f528e6b
+pkgver=r18.1c25bdd
 pkgrel=1
 pkgdesc="CAuto is a simple command line tool for automatic compile and link C++ projects."
 url="https://github.com/lehmann7/cauto"
@@ -17,7 +17,7 @@ pkgver() {
 
 package() {
   cd "${srcdir}/${pkgname}/"
-  make PREFIX="${pkgdir}" install
+  make PREFIX="${pkgdir}/usr" install
   # install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
 }
 

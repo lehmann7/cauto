@@ -15,6 +15,7 @@ all:
 	#  PREFIX/bin/cauto
 	#  PREFIX/lib/cauto/cauto
 	#  PREFIX/lib/CMakeLists.txt
+	#  PREFIX/lib/.gitignore
 	#
 	# for help type
 	#  $$ cauto help
@@ -35,4 +36,5 @@ install:
 	install -m 0755 bin/cauto $(PREFIX)/bin
 	install -m 0755 lib/cauto/cauto $(PREFIX)/lib/cauto
 	install -m 0644 lib/cauto/CMakeLists.txt $(PREFIX)/lib/cauto
+	install -m 0644 lib/cauto/.gitignore $(PREFIX)/lib/cauto
 .PHONY: install

@@ -160,12 +160,7 @@ FUNCTION(ADD_PACKAGE
 	FIND_PACKAGE(${package_name} ${ARGN})
 	SET(package_file "")
 	INCLUDE(${CAUTO_CONF_DIR}/${package_prefix}.cauto OPTIONAL)
-	IF(
-		NOT ${package_prefix}_FOUND AND
-		NOT ${package_name}_FOUND
-	)
-		CAUTO_MESSAGE("Package ${package_name} not found.")
-	ELSE()
+	IF((${package_prefix}_FOUND) OR (${package_name}_FOUND))
 		IF(NOT ${package_prefix}_INCLUDE_DIRS)
 			SET(${package_prefix}_INCLUDE_DIRS "")
 		ENDIF()
@@ -231,6 +226,8 @@ FUNCTION(ADD_PACKAGE
 		LIST(REMOVE_DUPLICATES ${package_prefix}_DEFINITIONS)
 		CAUTO_MESSAGE_LIST(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}")
 		SET(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}" PARENT_SCOPE)
+	ELSE()
+		CAUTO_MESSAGE("Package ${package_name} not found.")
 	ENDIF()
 	GET_CMAKE_PROPERTY(add_pkg_vars2 VARIABLES)
 	LIST(REMOVE_ITEM add_pkg_vars2 add_pkg_vars1 ${add_pkg_vars1})

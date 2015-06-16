@@ -1,5 +1,5 @@
 pkgname=cauto-git
-pkgver=r23.02bef99
+pkgver=r24.8dd6988
 pkgrel=1
 pkgdesc="CAuto is a simple command line tool for automatic compile and link C++ projects."
 url="https://github.com/lehmann7/cauto"

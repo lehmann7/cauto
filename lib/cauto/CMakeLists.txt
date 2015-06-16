@@ -184,6 +184,7 @@ FUNCTION(ADD_PACKAGE
 		ELSEIF(${package_name}_INCLUDE_DIRS)
 			LIST(APPEND ${package_prefix}_INCLUDE_DIRS "${${package_name}_INCLUDE_DIRS}")
 		ENDIF()
+		LIST(REMOVE_DUPLICATES ${package_prefix}_INCLUDE_DIRS)
 		CAUTO_MESSAGE_LIST(${package_prefix}_INCLUDE_DIRS "${${package_prefix}_INCLUDE_DIRS}")
 		SET(${package_prefix}_INCLUDE_DIRS "${${package_prefix}_INCLUDE_DIRS}" PARENT_SCOPE)
 
@@ -205,6 +206,7 @@ FUNCTION(ADD_PACKAGE
 		ELSEIF(${package_name}_LIBRARIES)
 			LIST(APPEND ${package_prefix}_LIBRARIES "${${package_name}_LIBRARIES}")
 		ENDIF()
+		LIST(REMOVE_DUPLICATES ${package_prefix}_LIBRARIES)
 		CAUTO_MESSAGE_LIST(${package_prefix}_LIBRARIES "${${package_prefix}_LIBRARIES}")
 		SET(${package_prefix}_LIBRARIES "${${package_prefix}_LIBRARIES}" PARENT_SCOPE)
 
@@ -226,6 +228,7 @@ FUNCTION(ADD_PACKAGE
 		ELSEIF(${package_name}_DEFINITIONS)
 			LIST(APPEND ${package_prefix}_DEFINITIONS "${${package_name}_DEFINITIONS}")
 		ENDIF()
+		LIST(REMOVE_DUPLICATES ${package_prefix}_DEFINITIONS)
 		CAUTO_MESSAGE_LIST(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}")
 		SET(${package_prefix}_DEFINITIONS "${${package_prefix}_DEFINITIONS}" PARENT_SCOPE)
 	ENDIF()

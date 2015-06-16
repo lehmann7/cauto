@@ -113,6 +113,7 @@ EOF
 	exit 1
 
 CMAKELISTS="$(readlink -m $(dirname $0)/CMakeLists.txt)"
+GITIGNORES="$(readlink -m $(dirname $0)/.gitignore)"
 
 while [ $# -gt 0 ]
 do
@@ -122,6 +123,7 @@ do
 		init)
 			(
 				ln -fs ${CMAKELISTS} .
+				[ ! -e .gitignore ] && cp ${GITIGNORES} .
 				mkdir -p build
 				(
 					cd build
